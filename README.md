@@ -300,8 +300,7 @@ MIT License
 
 ## 🙏 致谢
 
-本项目参考 hello-agent：
--hello-agent
+本项目参考 [Hello Agents - 构建你的 Agent 框架](https://datawhalechina.github.io/hello-agents/#/./chapter7/%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%9E%84%E5%BB%BA%E4%BD%A0%E7%9A%84Agent%E6%A1%86%E6%9E%B6)
 
 ---
 
