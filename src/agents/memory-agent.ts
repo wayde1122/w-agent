@@ -17,6 +17,23 @@ import { MemoryManager, MemoryManagerOptions } from "../memory/manager.js";
 import { MemoryItem } from "../memory/base.js";
 
 /**
+ * 关键词提取函数类型
+ */
+export type KeywordExtractor = (text: string) => string[];
+
+/**
+ * 默认关键词提取（简单实现，适合英文/空格分隔语言）
+ * 中文场景建议注入自定义实现（如 jieba 分词）
+ */
+export const defaultKeywordExtractor: KeywordExtractor = (text: string): string[] => {
+  const words = text
+    .replace(/[，。！？、；：""''（）\[\]【】,.!?;:'"()\[\]]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 2);
+  return [...new Set(words)];
+};
+
+/**
  * MemoryAgent 选项
  */
 export interface MemoryAgentOptions extends AgentOptions {
@@ -40,6 +57,11 @@ export interface MemoryAgentOptions extends AgentOptions {
   autoSaveConversation?: boolean;
   /** 对话重要性阈值 */
   conversationImportanceThreshold?: number;
+  /**
+   * 自定义关键词提取函数
+   * 默认实现适合英文，中文场景建议注入 jieba 等分词库
+   */
+  keywordExtractor?: KeywordExtractor;
 }
 
 /**
@@ -54,6 +76,7 @@ export class MemoryAgent extends Agent {
   private ragMinScore: number;
   private autoSaveConversation: boolean;
   private conversationImportanceThreshold: number;
+  private keywordExtractor: KeywordExtractor;
 
   private memoryManager: MemoryManager;
   private userId: string;
@@ -75,6 +98,7 @@ export class MemoryAgent extends Agent {
     this.autoSaveConversation = options.autoSaveConversation !== false;
     this.conversationImportanceThreshold =
       options.conversationImportanceThreshold ?? 0.3;
+    this.keywordExtractor = options.keywordExtractor ?? defaultKeywordExtractor;
 
     // 初始化记忆管理器
     this.memoryManager = new MemoryManager({
@@ -84,11 +108,9 @@ export class MemoryAgent extends Agent {
       ...options.memoryOptions,
     });
 
-    console.log(`🧠 MemoryAgent 初始化完成`);
-    console.log(`   用户: ${this.userId}`);
-    console.log(`   会话: ${this.sessionId}`);
-    console.log(`   RAG: ${this.enableRAG ? "✅" : "❌"}`);
-    console.log(`   知识图谱: ${this.enableKnowledgeGraph ? "✅" : "❌"}`);
+    this.logger.info(`MemoryAgent 初始化完成`);
+    this.logger.debug(`用户: ${this.userId}, 会话: ${this.sessionId}`);
+    this.logger.debug(`RAG: ${this.enableRAG}, 知识图谱: ${this.enableKnowledgeGraph}`);
   }
 
   /**
@@ -147,9 +169,9 @@ export class MemoryAgent extends Agent {
           useVectorSearch: true,
         });
         context.memories = memories;
-        console.log(`📚 RAG 检索到 ${memories.length} 条相关记忆`);
+        this.logger.debug(`RAG 检索到 ${memories.length} 条相关记忆`);
       } catch (e) {
-        console.warn("⚠️ RAG 检索失败:", e);
+        this.logger.warn(`RAG 检索失败: ${e}`);
       }
     }
 
@@ -172,9 +194,9 @@ export class MemoryAgent extends Agent {
             }
           }
         }
-        console.log(`🔗 知识图谱检索到 ${context.entities.length} 个相关实体`);
+        this.logger.debug(`知识图谱检索到 ${context.entities.length} 个相关实体`);
       } catch (e) {
-        console.warn("⚠️ 知识图谱检索失败:", e);
+        this.logger.warn(`知识图谱检索失败: ${e}`);
       }
     }
 
@@ -387,7 +409,7 @@ export class MemoryAgent extends Agent {
         }
       }
     } catch (e) {
-      console.warn("⚠️ 保存对话失败:", e);
+      this.logger.warn(`保存对话失败: ${e}`);
     }
   }
 
@@ -450,14 +472,10 @@ export class MemoryAgent extends Agent {
 
   /**
    * 从文本中提取关键词
+   * 使用注入的 keywordExtractor，默认实现适合英文
    */
   private extractKeywords(text: string): string[] {
-    // 简单实现：提取长度 >= 2 的词
-    const words = text
-      .replace(/[，。！？、；：""''（）\[\]【】]/g, " ")
-      .split(/\s+/)
-      .filter((w) => w.length >= 2);
-    return [...new Set(words)];
+    return this.keywordExtractor(text);
   }
 
   /**

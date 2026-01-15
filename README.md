@@ -12,16 +12,20 @@ A TypeScript Agent Framework - Node.js port of HelloAgents
 ## 特性
 
 - **多种 Agent 模式**
+  - `UnifiedAgent` - **推荐** 基于 ToolExecutor 的统一 Agent，支持多轮工具调用
   - `SimpleAgent` - 简单对话 Agent，支持可选工具调用
   - `ReActAgent` - 推理与行动结合的 Agent (Thought-Action-Observation)
   - `PlanSolveAgent` - 计划与执行 Agent (Plan-Execute-Summarize)
   - `FunctionCallAgent` - OpenAI 原生函数调用 Agent
+  - `MemoryAgent` - 具有记忆和 RAG 功能的 Agent
 
 - **工具系统**
-  - 灵活的工具基类
-  - 工具注册表管理
-  - 支持可展开工具
+  - 灵活的工具基类（`Tool`、`SimpleTool`）
+  - 工具注册表管理（`ToolRegistry`）
+  - 统一工具执行器（`ToolExecutor`）- 支持多轮工具调用循环
+  - 支持可展开工具（`ExpandableTool`）
   - OpenAI Function Calling Schema 生成
+  - 内置工具：`CalculatorTool`、`SearchTool`（**注意：SearchTool 是 mock 实现**）
 
 - **记忆系统**
   - 工作记忆 (Working Memory) - 短期上下文
@@ -120,6 +124,34 @@ const response = await agent.run('请计算 (15 + 25) * 3');
 console.log(response);
 ```
 
+### UnifiedAgent 示例（推荐）
+
+```typescript
+import { HelloAgentsLLM, UnifiedAgent, CalculatorTool, ConsoleLogger } from 'w-agent';
+
+const llm = new HelloAgentsLLM();
+const logger = new ConsoleLogger('INFO'); // 可选：启用日志输出
+
+const agent = new UnifiedAgent({
+  name: 'SmartBot',
+  llm,
+  logger,
+  maxToolSteps: 5,        // 最大工具调用轮数
+  useNativeToolCalling: true, // 使用 OpenAI 原生 tool calling
+  keepTrace: true,        // 保留执行追踪
+});
+
+agent.addTool(new CalculatorTool());
+
+// 运行并获取详细结果
+const result = await agent.runWithResult('请计算 (15 + 25) * 3');
+console.log('答案:', result.text);
+console.log('工具调用步数:', result.toolStepsUsed);
+if (result.trace) {
+  console.log('执行追踪:', result.trace);
+}
+```
+
 ### ReActAgent 示例
 
 ```typescript
@@ -133,6 +165,7 @@ const agent = new ReActAgent({
   maxSteps: 5,
 });
 
+// 注意：SearchTool 是 mock 实现，不会真正联网搜索
 agent.addTool(new SearchTool());
 
 const response = await agent.run('什么是机器学习？');
@@ -264,10 +297,79 @@ node dist/examples/simple-agent-demo.js
 npx ts-node examples/simple-agent-demo.ts
 ```
 
+## 自定义工具
+
+### 创建简单工具
+
+```typescript
+import { SimpleTool } from 'w-agent';
+
+const myTool = new SimpleTool(
+  'greet',
+  '向用户打招呼',
+  [{ name: 'name', type: 'string', description: '用户名', required: true }],
+  (params) => `你好，${params.name}！`
+);
+```
+
+### 自定义搜索工具
+
+**注意**：内置的 `SearchTool` 是 **mock 实现**，不会真正联网搜索。如需真实搜索，可以通过 `searchFn` 注入自定义实现：
+
+```typescript
+import { SearchTool } from 'w-agent';
+
+// 方式 1：注入自定义搜索函数
+const realSearchTool = new SearchTool({
+  searchFn: async (query) => {
+    // 调用你的搜索 API（如 SerpAPI、Bing Search API 等）
+    const response = await fetch(`https://your-search-api.com?q=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    return data.results.map((r: { title: string }) => r.title);
+  },
+});
+
+// 方式 2：继承 Tool 基类实现完整自定义
+import { Tool, ToolParameter, ToolParameters } from 'w-agent';
+
+class MySearchTool extends Tool {
+  constructor() {
+    super('my_search', '使用自定义 API 搜索');
+  }
+
+  async run(params: ToolParameters): Promise<string> {
+    const query = params.input as string;
+    // 你的搜索实现...
+    return '搜索结果';
+  }
+
+  getParameters(): ToolParameter[] {
+    return [{ name: 'input', type: 'string', description: '搜索关键词', required: true }];
+  }
+}
+```
+
+## 日志系统
+
+库默认静默（不输出日志）。如需启用日志，可以注入 Logger：
+
+```typescript
+import { HelloAgentsLLM, UnifiedAgent, ConsoleLogger, createLogger } from 'w-agent';
+
+// 方式 1：使用 ConsoleLogger
+const logger = new ConsoleLogger('DEBUG'); // 级别：DEBUG | INFO | WARN | ERROR
+
+// 方式 2：使用工厂函数
+const logger2 = createLogger('INFO');
+
+const llm = new HelloAgentsLLM({ logger });
+const agent = new UnifiedAgent({ name: 'Bot', llm, logger });
+```
+
 ## 开源使用建议（GitHub）
 
 - **不要提交 `.env`**：用 `env.example` 做模板，敏感信息只放本地环境。
-- **想验证 RAG 是否走到 Qdrant**：运行 MemoryAgent 示例时观察日志 `🔍 Qdrant 搜索返回 X 个结果`。
+- **想验证 RAG 是否走到 Qdrant**：运行 MemoryAgent 示例时观察日志。
 
 ## License
 

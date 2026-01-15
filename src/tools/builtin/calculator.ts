@@ -4,16 +4,27 @@
 
 import { evaluate } from 'mathjs';
 import { Tool, ToolParameter, ToolParameters } from '../base.js';
+import { Logger, silentLogger } from '../../core/logger.js';
+
+/**
+ * 计算器工具配置
+ */
+export interface CalculatorToolOptions {
+  logger?: Logger;
+}
 
 /**
  * 计算器工具类
  */
 export class CalculatorTool extends Tool {
-  constructor() {
+  private readonly logger: Logger;
+
+  constructor(options: CalculatorToolOptions = {}) {
     super(
       'python_calculator',
       '执行数学计算。支持基本运算、数学函数等。例如：2+3*4, sqrt(16), sin(pi/2)等。'
     );
+    this.logger = options.logger ?? silentLogger;
   }
 
   /**
@@ -28,17 +39,17 @@ export class CalculatorTool extends Tool {
       return '错误：计算表达式不能为空';
     }
 
-    console.log(`🧮 正在计算: ${expression}`);
+    this.logger.debug(`正在计算: ${expression}`);
 
     try {
       const result = evaluate(expression);
       const resultStr = String(result);
-      console.log(`✅ 计算结果: ${resultStr}`);
+      this.logger.debug(`计算结果: ${resultStr}`);
       return resultStr;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const errorMsg = `计算失败: ${message}`;
-      console.error(`❌ ${errorMsg}`);
+      this.logger.error(errorMsg);
       return errorMsg;
     }
   }

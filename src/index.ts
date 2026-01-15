@@ -16,12 +16,27 @@ export {
 } from './core/exceptions.js';
 
 export {
+  Logger,
+  LogLevel,
+  ConsoleLogger,
+  SilentLogger,
+  silentLogger,
+  createLogger,
+  getDefaultLogger,
+  setDefaultLogger,
+} from './core/logger.js';
+
+export {
   Config,
   ConfigOptions,
   ConfigSchema,
+  RuntimeConfig,
   createConfig,
+  createRuntimeConfig,
   createConfigFromEnv,
+  createRuntimeConfigFromEnv,
   defaultConfig,
+  defaultRuntimeConfig,
 } from './core/config.js';
 
 export {
@@ -42,6 +57,14 @@ export {
 } from './core/llm.js';
 
 export { Agent, AgentOptions } from './core/agent.js';
+
+export {
+  runToolCallingLoop,
+  runSingleToolCall,
+  ToolCallingLoopOptions,
+  ToolCallingStep,
+  LoopResult,
+} from './core/tool-calling-loop.js';
 
 export {
   DatabaseConfig,
@@ -67,10 +90,18 @@ export {
   createTool,
 } from './tools/base.js';
 
-export { ToolRegistry, globalRegistry } from './tools/registry.js';
+export { ToolRegistry, ToolRegistryOptions, globalRegistry } from './tools/registry.js';
 
-export { CalculatorTool, calculate } from './tools/builtin/calculator.js';
-export { SearchTool, search } from './tools/builtin/search.js';
+export {
+  ToolExecutor,
+  ToolExecutorOptions,
+  ToolCallRequest,
+  ToolCallResult,
+  createToolExecutor,
+} from './tools/executor.js';
+
+export { CalculatorTool, CalculatorToolOptions, calculate } from './tools/builtin/calculator.js';
+export { SearchTool, SearchToolOptions, SearchFunction, search } from './tools/builtin/search.js';
 
 // Memory exports
 export {
@@ -135,4 +166,14 @@ export { SimpleAgent, SimpleAgentOptions } from './agents/simple-agent.js';
 export { ReActAgent, ReActAgentOptions } from './agents/react-agent.js';
 export { PlanSolveAgent, PlanSolveAgentOptions } from './agents/plan-solve-agent.js';
 export { FunctionCallAgent, FunctionCallAgentOptions } from './agents/function-call-agent.js';
-export { MemoryAgent, MemoryAgentOptions } from './agents/memory-agent.js';
+export {
+  MemoryAgent,
+  MemoryAgentOptions,
+  KeywordExtractor,
+  defaultKeywordExtractor,
+} from './agents/memory-agent.js';
+export {
+  UnifiedAgent,
+  UnifiedAgentOptions,
+  UnifiedAgentResult,
+} from './agents/unified-agent.js';

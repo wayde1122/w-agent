@@ -1,17 +1,42 @@
 /**
  * 搜索工具 - 模拟搜索功能
+ *
+ * **重要**：这是一个 MOCK 实现，不会真正联网搜索。
+ * 实际使用时应替换为真实的搜索 API（如 SerpAPI、Bing Search API 等）。
+ * 可通过 `searchFn` 选项注入自定义搜索实现。
  */
 
 import { Tool, ToolParameter, ToolParameters } from '../base.js';
+import { Logger, silentLogger } from '../../core/logger.js';
+
+/**
+ * 自定义搜索函数类型
+ */
+export type SearchFunction = (query: string) => Promise<string[]> | string[];
+
+/**
+ * 搜索工具配置
+ */
+export interface SearchToolOptions {
+  logger?: Logger;
+  /** 自定义搜索实现，替代内置 mock */
+  searchFn?: SearchFunction;
+}
 
 /**
  * 搜索工具类
  *
- * 注意：这是一个模拟实现，实际使用时应替换为真实的搜索 API
+ * 注意：默认是 MOCK 实现，不会真正联网。
+ * 可通过 `searchFn` 选项注入真实搜索 API。
  */
 export class SearchTool extends Tool {
-  constructor() {
+  private readonly logger: Logger;
+  private readonly searchFn?: SearchFunction;
+
+  constructor(options: SearchToolOptions = {}) {
     super('search', '搜索互联网获取信息。输入搜索关键词，返回相关结果。');
+    this.logger = options.logger ?? silentLogger;
+    this.searchFn = options.searchFn;
   }
 
   /**
@@ -24,15 +49,20 @@ export class SearchTool extends Tool {
       return '错误：搜索查询不能为空';
     }
 
-    console.log(`🔍 正在搜索: ${query}`);
+    this.logger.debug(`正在搜索: ${query}`);
 
-    // 模拟搜索结果
-    // 在实际应用中，这里应该调用真实的搜索 API
-    const mockResults = this.getMockResults(query);
+    // 如果有自定义搜索函数，使用它
+    let results: string[];
+    if (this.searchFn) {
+      results = await this.searchFn(query);
+    } else {
+      // 模拟搜索结果
+      results = this.getMockResults(query);
+    }
 
-    console.log(`✅ 找到 ${mockResults.length} 条结果`);
+    this.logger.debug(`找到 ${results.length} 条结果`);
 
-    return mockResults.join('\n\n');
+    return results.join('\n\n');
   }
 
   /**

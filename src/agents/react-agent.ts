@@ -83,11 +83,11 @@ export class ReActAgent extends Agent {
     this.currentHistory = [];
     let currentStep = 0;
 
-    console.log(`\n🤖 ${this.name} 开始处理问题: ${input}`);
+    this.logger.info(`${this.name} 开始处理问题: ${input}`);
 
     while (currentStep < this.maxSteps) {
       currentStep++;
-      console.log(`\n--- 第 ${currentStep} 步 ---`);
+      this.logger.debug(`第 ${currentStep} 步`);
 
       // 构建提示词
       const toolsDesc = this.toolRegistry.getToolsDescription();
@@ -102,7 +102,7 @@ export class ReActAgent extends Agent {
       const responseText = await this.llm.invoke(messages);
 
       if (!responseText) {
-        console.log('❌ 错误：LLM未能返回有效响应。');
+        this.logger.error('LLM未能返回有效响应');
         break;
       }
 
@@ -110,18 +110,18 @@ export class ReActAgent extends Agent {
       const { thought, action } = this.parseOutput(responseText);
 
       if (thought) {
-        console.log(`🤔 思考: ${thought}`);
+        this.logger.debug(`思考: ${thought}`);
       }
 
       if (!action) {
-        console.log('⚠️ 警告：未能解析出有效的Action，流程终止。');
+        this.logger.warn('未能解析出有效的Action，流程终止');
         break;
       }
 
       // 检查是否完成
       if (action.startsWith('Finish')) {
         const finalAnswer = this.parseActionInput(action);
-        console.log(`🎉 最终答案: ${finalAnswer}`);
+        this.logger.info(`最终答案: ${finalAnswer}`);
 
         // 保存到历史记录
         this.addMessage(new Message(input, 'user'));
@@ -137,18 +137,18 @@ export class ReActAgent extends Agent {
         continue;
       }
 
-      console.log(`🎬 行动: ${toolName}[${toolInput}]`);
+      this.logger.debug(`行动: ${toolName}[${toolInput}]`);
 
       // 调用工具
       const observation = await this.toolRegistry.executeTool(toolName, toolInput);
-      console.log(`👀 观察: ${observation}`);
+      this.logger.debug(`观察: ${observation}`);
 
       // 更新历史
       this.currentHistory.push(`Action: ${action}`);
       this.currentHistory.push(`Observation: ${observation}`);
     }
 
-    console.log('⏰ 已达到最大步数，流程终止。');
+    this.logger.warn('已达到最大步数，流程终止');
     const finalAnswer = '抱歉，我无法在限定步数内完成这个任务。';
 
     // 保存到历史记录

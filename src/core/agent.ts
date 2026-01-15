@@ -5,6 +5,7 @@
 import { Message } from './message.js';
 import { HelloAgentsLLM } from './llm.js';
 import { Config, createConfig } from './config.js';
+import { Logger, silentLogger } from './logger.js';
 
 /**
  * Agent 构造选项
@@ -14,6 +15,8 @@ export interface AgentOptions {
   llm: HelloAgentsLLM;
   systemPrompt?: string;
   config?: Partial<Config>;
+  /** 可选注入 Logger */
+  logger?: Logger;
 }
 
 /**
@@ -24,6 +27,7 @@ export abstract class Agent {
   readonly llm: HelloAgentsLLM;
   readonly systemPrompt?: string;
   readonly config: Config;
+  readonly logger: Logger;
 
   protected history: Message[] = [];
 
@@ -32,6 +36,7 @@ export abstract class Agent {
     this.llm = options.llm;
     this.systemPrompt = options.systemPrompt;
     this.config = createConfig(options.config);
+    this.logger = options.logger ?? silentLogger;
   }
 
   /**

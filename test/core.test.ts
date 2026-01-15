@@ -60,7 +60,7 @@ describe('Config', () => {
     expect(config.defaultProvider).toBe('openai');
     expect(config.temperature).toBe(0.7);
     expect(config.debug).toBe(false);
-    expect(config.logLevel).toBe('INFO');
+    expect(config.logLevel).toBe('SILENT'); // 默认静默，库不输出日志
     expect(config.maxHistoryLength).toBe(100);
   });
 

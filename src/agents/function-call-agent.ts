@@ -298,7 +298,7 @@ export class FunctionCallAgent extends Agent {
         for (const expandedTool of expandedTools) {
           this.toolRegistry.registerTool(expandedTool);
         }
-        console.log(`✅ 工具 '${tool.name}' 已展开为 ${expandedTools.length} 个独立工具`);
+        this.logger.debug(`工具 '${tool.name}' 已展开为 ${expandedTools.length} 个独立工具`);
         return;
       }
     }

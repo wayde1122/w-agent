@@ -3,6 +3,7 @@
  */
 
 import { Tool, ToolParameters, FunctionSchema } from './base.js';
+import { Logger, silentLogger } from '../core/logger.js';
 
 /**
  * 函数工具信息
@@ -10,6 +11,13 @@ import { Tool, ToolParameters, FunctionSchema } from './base.js';
 interface FunctionToolInfo {
   description: string;
   func: (input: string) => Promise<string> | string;
+}
+
+/**
+ * 工具注册表配置
+ */
+export interface ToolRegistryOptions {
+  logger?: Logger;
 }
 
 /**
@@ -23,6 +31,11 @@ interface FunctionToolInfo {
 export class ToolRegistry {
   private tools: Map<string, Tool> = new Map();
   private functions: Map<string, FunctionToolInfo> = new Map();
+  private readonly logger: Logger;
+
+  constructor(options: ToolRegistryOptions = {}) {
+    this.logger = options.logger ?? silentLogger;
+  }
 
   /**
    * 注册 Tool 对象
@@ -34,22 +47,22 @@ export class ToolRegistry {
       if (expandedTools && expandedTools.length > 0) {
         for (const subTool of expandedTools) {
           if (this.tools.has(subTool.name)) {
-            console.warn(`⚠️ 警告：工具 '${subTool.name}' 已存在，将被覆盖。`);
+            this.logger.warn(`工具 '${subTool.name}' 已存在，将被覆盖`);
           }
           this.tools.set(subTool.name, subTool);
         }
-        console.log(`✅ 工具 '${tool.name}' 已展开为 ${expandedTools.length} 个独立工具`);
+        this.logger.debug(`工具 '${tool.name}' 已展开为 ${expandedTools.length} 个独立工具`);
         return;
       }
     }
 
     // 普通工具或不展开的工具
     if (this.tools.has(tool.name)) {
-      console.warn(`⚠️ 警告：工具 '${tool.name}' 已存在，将被覆盖。`);
+      this.logger.warn(`工具 '${tool.name}' 已存在，将被覆盖`);
     }
 
     this.tools.set(tool.name, tool);
-    console.log(`✅ 工具 '${tool.name}' 已注册。`);
+    this.logger.debug(`工具 '${tool.name}' 已注册`);
   }
 
   /**
@@ -61,11 +74,11 @@ export class ToolRegistry {
     func: (input: string) => Promise<string> | string
   ): void {
     if (this.functions.has(name)) {
-      console.warn(`⚠️ 警告：工具 '${name}' 已存在，将被覆盖。`);
+      this.logger.warn(`工具 '${name}' 已存在，将被覆盖`);
     }
 
     this.functions.set(name, { description, func });
-    console.log(`✅ 工具 '${name}' 已注册。`);
+    this.logger.debug(`工具 '${name}' 已注册`);
   }
 
   /**
@@ -74,12 +87,12 @@ export class ToolRegistry {
   unregister(name: string): void {
     if (this.tools.has(name)) {
       this.tools.delete(name);
-      console.log(`🗑️ 工具 '${name}' 已注销。`);
+      this.logger.debug(`工具 '${name}' 已注销`);
     } else if (this.functions.has(name)) {
       this.functions.delete(name);
-      console.log(`🗑️ 工具 '${name}' 已注销。`);
+      this.logger.debug(`工具 '${name}' 已注销`);
     } else {
-      console.warn(`⚠️ 工具 '${name}' 不存在。`);
+      this.logger.warn(`工具 '${name}' 不存在`);
     }
   }
 
@@ -204,7 +217,7 @@ export class ToolRegistry {
   clear(): void {
     this.tools.clear();
     this.functions.clear();
-    console.log('🧹 所有工具已清空。');
+    this.logger.debug('所有工具已清空');
   }
 
   /**

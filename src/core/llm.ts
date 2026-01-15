@@ -4,6 +4,7 @@
 
 import OpenAI from 'openai';
 import { LLMError } from './exceptions.js';
+import { Logger, silentLogger } from './logger.js';
 
 /**
  * 支持的 LLM 提供商
@@ -32,6 +33,8 @@ export interface LLMOptions {
   temperature?: number;
   maxTokens?: number;
   timeout?: number;
+  /** 可选注入 Logger */
+  logger?: Logger;
 }
 
 /**
@@ -106,12 +109,16 @@ export class HelloAgentsLLM {
   readonly temperature: number;
   readonly maxTokens?: number;
   readonly timeout: number;
+  readonly logger: Logger;
 
   private readonly client: OpenAI;
   private readonly apiKey: string;
   private readonly baseURL: string;
 
   constructor(options: LLMOptions = {}) {
+    // Logger
+    this.logger = options.logger ?? silentLogger;
+
     // 自动检测 provider
     this.provider = options.provider ?? this.autoDetectProvider(options.apiKey, options.baseURL);
 
@@ -235,7 +242,7 @@ export class HelloAgentsLLM {
     messages: ChatMessage[],
     temperature?: number
   ): AsyncGenerator<string, void, unknown> {
-    console.log(`🧠 正在调用 ${this.model} 模型...`);
+    this.logger.debug(`正在调用 ${this.model} 模型...`);
 
     try {
       const stream = await this.client.chat.completions.create({
@@ -246,20 +253,19 @@ export class HelloAgentsLLM {
         stream: true,
       });
 
-      console.log('✅ 大语言模型响应成功:');
+      this.logger.debug('LLM 流式响应开始');
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content ?? '';
         if (content) {
-          process.stdout.write(content);
           yield content;
         }
       }
 
-      console.log(); // 换行
+      this.logger.debug('LLM 流式响应结束');
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error(`❌ 调用 LLM API 时发生错误: ${message}`);
+      this.logger.error(`调用 LLM API 时发生错误: ${message}`);
       throw new LLMError(`LLM 调用失败: ${message}`);
     }
   }
