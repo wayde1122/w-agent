@@ -1,307 +1,274 @@
-# w-agent - AI Agent 框架
+# w-agent
 
-一个简单但强大的 AI Agent 框架，提供多种 Agent 实现模式，帮助开发者快速构建智能应用。
+A TypeScript Agent Framework - Node.js port of HelloAgents
 
-## ✨ 特性
+一个功能完整的 AI Agent 框架，支持多种 Agent 模式、工具调用和记忆管理。
 
-- 🤖 **多种 Agent 模式**：支持 SimpleAgent、ReActAgent、ReflectionAgent、PlanAndSolveAgent
-- 🔧 **工具系统**：灵活的工具注册和调用机制
-- 🧩 **易于扩展**：清晰的基类设计，方便自定义实现
-- 💬 **对话管理**：内置消息历史管理
-- 🎯 **类型安全**：完整的类型提示支持
+## 文档入口
 
-## 📦 安装
+- 快速上手：`QUICKSTART.md`
+- 架构与设计：`ARCHITECTURE.md`
 
-### 依赖要求
+## 特性
+
+- **多种 Agent 模式**
+  - `SimpleAgent` - 简单对话 Agent，支持可选工具调用
+  - `ReActAgent` - 推理与行动结合的 Agent (Thought-Action-Observation)
+  - `PlanSolveAgent` - 计划与执行 Agent (Plan-Execute-Summarize)
+  - `FunctionCallAgent` - OpenAI 原生函数调用 Agent
+
+- **工具系统**
+  - 灵活的工具基类
+  - 工具注册表管理
+  - 支持可展开工具
+  - OpenAI Function Calling Schema 生成
+
+- **记忆系统**
+  - 工作记忆 (Working Memory) - 短期上下文
+  - 情景记忆 (Episodic Memory) - 事件和经历
+  - 语义记忆 (Semantic Memory) - 知识和概念
+  - 记忆整合和遗忘机制
+
+- **数据库存储**
+  - Qdrant 向量数据库 - 语义搜索和相似度检索
+  - Neo4j 图数据库 - 知识图谱和关系推理
+  - 多种 Embedding 模型支持 (OpenAI、DashScope、本地)
+
+- **LLM 支持**
+  - 基于 OpenAI SDK
+  - 支持多种提供商：OpenAI、DeepSeek、通义千问、ModelScope、Kimi、智谱、Ollama、vLLM
+  - 自动检测 Provider
+  - 流式和非流式响应
+
+## 安装
 
 ```bash
-pip install -r requirements.txt
+npm install
 ```
 
-### 环境配置
+## 配置
 
-复制 `.env.example` 到 `.env` 并配置你的 LLM 服务信息：
-
-```bash
-cp .env.example .env
-```
-
-编辑 `.env` 文件：
+创建 `.env` 文件配置 LLM：
 
 ```env
-LLM_MODEL_ID=your-model-name
+LLM_MODEL_ID=gpt-3.5-turbo
 LLM_API_KEY=your-api-key
-LLM_BASE_URL=your-api-base-url
-LLM_TIMEOUT=60
+LLM_BASE_URL=https://api.openai.com/v1
+
+# Embedding 配置
+EMBED_MODEL_TYPE=dashscope
+EMBED_MODEL_NAME=text-embedding-v3
+EMBED_API_KEY=your-embed-api-key
+EMBED_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+
+# Qdrant 配置
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=your-qdrant-api-key
+
+# Neo4j 配置
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=your-password
 ```
 
-## 🚀 快速开始
+或使用特定提供商的环境变量：
 
-### 1. SimpleAgent - 基础对话
-
-```python
-from dotenv import load_dotenv
-from hello_agents import HelloAgentsLLM
-from agents.simple_agent import MySimpleAgent
-
-load_dotenv()
-llm = HelloAgentsLLM()
-
-agent = MySimpleAgent(
-    name="助手",
-    llm=llm,
-    system_prompt="你是一个友好的AI助手"
-)
-
-response = agent.run("你好，介绍一下自己")
-print(response)
+```env
+OPENAI_API_KEY=sk-xxx
+# 或
+DEEPSEEK_API_KEY=sk-xxx
+# 或
+DASHSCOPE_API_KEY=sk-xxx
 ```
 
-### 2. ReActAgent - 推理与行动
+## 快速开始
 
-```python
-from hello_agents import HelloAgentsLLM, ToolRegistry
-from hello_agents.tools import CalculatorTool
-from agents.react_agent import MyReActAgent
+### SimpleAgent 示例
 
-llm = HelloAgentsLLM()
+```typescript
+import { HelloAgentsLLM, SimpleAgent } from 'w-agent';
 
-# 注册工具
-tool_registry = ToolRegistry()
-tool_registry.register_tool(CalculatorTool())
+const llm = new HelloAgentsLLM();
 
-agent = MyReActAgent(
-    name="推理助手",
-    llm=llm,
-    tool_registry=tool_registry,
-    max_steps=5
-)
+const agent = new SimpleAgent({
+  name: 'MyBot',
+  llm,
+  systemPrompt: '你是一个友好的AI助手。',
+});
 
-result = agent.run("计算 (15 * 8) + 32 的结果")
-print(result)
+const response = await agent.run('你好！');
+console.log(response);
 ```
 
-### 3. ReflectionAgent - 反思与改进
+### 带工具的 Agent
 
-```python
-from hello_agents import HelloAgentsLLM
-from agents.reflection_agent import MyReflectionAgent
+```typescript
+import { HelloAgentsLLM, SimpleAgent, CalculatorTool, ToolRegistry } from 'w-agent';
 
-llm = HelloAgentsLLM()
+const llm = new HelloAgentsLLM();
+const toolRegistry = new ToolRegistry();
+toolRegistry.registerTool(new CalculatorTool());
 
-agent = MyReflectionAgent(
-    name="反思助手",
-    llm=llm,
-    max_iterations=2
-)
+const agent = new SimpleAgent({
+  name: 'CalculatorBot',
+  llm,
+  toolRegistry,
+  enableToolCalling: true,
+});
 
-result = agent.run("写一篇关于人工智能的简短文章")
-print(result)
+const response = await agent.run('请计算 (15 + 25) * 3');
+console.log(response);
 ```
 
-### 4. PlanAndSolveAgent - 计划与执行
+### ReActAgent 示例
 
-```python
-from hello_agents import HelloAgentsLLM
-from agents.plan_solve_agent import MyPlanAndSolveAgent
+```typescript
+import { HelloAgentsLLM, ReActAgent, SearchTool } from 'w-agent';
 
-llm = HelloAgentsLLM()
+const llm = new HelloAgentsLLM();
 
-agent = MyPlanAndSolveAgent(
-    name="规划助手",
-    llm=llm
-)
+const agent = new ReActAgent({
+  name: 'ResearchBot',
+  llm,
+  maxSteps: 5,
+});
 
-question = "一个水果店周一卖出15个苹果，周二卖出周一的两倍，周三卖出比周二少5个。三天总共卖出多少个？"
-result = agent.run(question)
-print(result)
+agent.addTool(new SearchTool());
+
+const response = await agent.run('什么是机器学习？');
+console.log(response);
 ```
 
-## 📖 Agent 模式详解
+### 记忆系统示例
 
-### SimpleAgent
+```typescript
+import { MemoryManager } from 'w-agent';
 
-**适用场景**：基础对话、简单问答
+const manager = new MemoryManager({ userId: 'user1' });
 
-**特点**：
+// 添加记忆
+manager.addMemory('用户喜欢Python编程');
+manager.addMemory('今天学习了机器学习', { memoryType: 'episodic' });
 
-- 支持系统提示词
-- 自动管理对话历史
-- 可选工具调用能力
+// 检索记忆
+const memories = manager.retrieveMemories('Python', { limit: 5 });
 
-### ReActAgent
-
-**适用场景**：需要工具协助的复杂任务
-
-**特点**：
-
-- Thought-Action-Observation 循环
-- 支持多轮工具调用
-- 自动推理决策
-
-**流程**：
-
-```
-用户问题 → 思考(Thought) → 行动(Action) → 观察(Observation) → ... → 最终答案
+// 记忆整合
+manager.consolidateMemories('working', 'episodic', 0.7);
 ```
 
-### ReflectionAgent
+### 向量数据库 (Qdrant) 示例
 
-**适用场景**：需要多次优化的内容生成任务
+```typescript
+import { QdrantVectorStore, getEmbedding } from 'w-agent';
 
-**特点**：
+// 初始化
+const qdrant = new QdrantVectorStore({
+  collectionName: 'my_collection',
+  vectorSize: 1024,
+});
 
-- Generate-Reflect-Refine 循环
-- 支持自定义提示词模板
-- 可配置迭代次数
+const embedder = getEmbedding();
 
-**流程**：
+// 添加向量
+const texts = ['人工智能', '机器学习', '深度学习'];
+const vectors = await embedder.encode(texts);
+const metadata = texts.map((text) => ({ text, category: 'AI' }));
+await qdrant.addVectors(vectors, metadata);
 
-```
-任务 → 生成初始内容 → 反思评估 → 精炼改进 → (循环) → 最终内容
-```
-
-### PlanAndSolveAgent
-
-**适用场景**：多步骤推理问题
-
-**特点**：
-
-- 计划-执行-汇总三阶段
-- 自动分解复杂问题
-- 逐步执行并追踪结果
-
-**流程**：
-
-```
-问题 → 制定计划(Planning) → 执行步骤(Solving) → 汇总结果(Summarizing) → 答案
+// 语义搜索
+const queryVector = (await embedder.encode('什么是AI？'))[0];
+const results = await qdrant.searchSimilar(queryVector, 5);
 ```
 
-## 🏗️ 项目结构
+### 图数据库 (Neo4j) 示例
+
+```typescript
+import { Neo4jGraphStore } from 'w-agent';
+
+// 初始化
+const neo4j = new Neo4jGraphStore();
+
+// 添加实体
+await neo4j.addEntity('ai', '人工智能', 'Concept');
+await neo4j.addEntity('ml', '机器学习', 'Concept');
+
+// 添加关系
+await neo4j.addRelationship('ml', 'ai', 'SUBSET_OF');
+
+// 查找相关实体
+const related = await neo4j.findRelatedEntities('ai', { maxDepth: 2 });
+
+// 关闭连接
+await neo4j.close();
+```
+
+## 项目结构
 
 ```
 w-agent/
-├── hello_agents/           # 框架核心包
-│   ├── __init__.py        # 包导出
-│   ├── core/              # 核心模块
-│   │   ├── agent.py       # Agent基类
-│   │   ├── config.py      # 配置管理
-│   │   ├── message.py     # 消息系统
-│   │   └── llm.py         # LLM接口
-│   └── tools/             # 工具系统
-│       └── __init__.py
-├── agents/                # Agent实现
-│   ├── simple_agent.py    # SimpleAgent实现
-│   ├── react_agent.py     # ReActAgent实现
-│   ├── reflection_agent.py # ReflectionAgent实现
-│   └── plan_solve_agent.py # PlanAndSolveAgent实现
-├── tools/                 # 工具定义
-│   ├── base.py           # 工具基类
-│   ├── registry.py       # 工具注册表
-│   └── builtin/          # 内置工具
-│       ├── calculator.py  # 计算器工具
-│       └── search.py      # 搜索工具
-├── core/                  # 核心定义（原始）
-│   ├── agent.py
-│   ├── config.py
-│   └── message.py
-├── test/                  # 测试文件
-│   ├── test_simple_agent.py
-│   ├── test_react_agent.py
-│   ├── test_reflection_agent.py
-│   └── test_plan_solve_agent.py
-├── HelloAgentsLLM.py      # LLM客户端
-├── requirements.txt       # 依赖列表
-├── .env.example          # 环境变量示例
-└── README.md             # 本文件
+├── src/
+│   ├── core/           # 核心模块
+│   │   ├── agent.ts    # Agent 基类
+│   │   ├── llm.ts      # LLM 客户端
+│   │   ├── message.ts  # 消息系统
+│   │   ├── config.ts   # 配置管理
+│   │   └── exceptions.ts
+│   ├── agents/         # Agent 实现
+│   │   ├── simple-agent.ts
+│   │   ├── react-agent.ts
+│   │   ├── plan-solve-agent.ts
+│   │   └── function-call-agent.ts
+│   ├── tools/          # 工具系统
+│   │   ├── base.ts
+│   │   ├── registry.ts
+│   │   └── builtin/
+│   ├── memory/         # 记忆系统
+│   │   ├── base.ts
+│   │   ├── manager.ts
+│   │   ├── types/
+│   │   └── storage/    # 数据库存储
+│   │       ├── embedding.ts
+│   │       ├── qdrant-store.ts
+│   │       └── neo4j-store.ts
+│   └── index.ts
+├── examples/           # 示例代码
+├── test/              # 测试
+└── package.json
 ```
 
-## 🔧 自定义 Agent
-
-所有 Agent 都继承自基类，你可以轻松创建自己的 Agent：
-
-```python
-from hello_agents import Agent, HelloAgentsLLM, Message
-
-class MyCustomAgent(Agent):
-    def run(self, input_text: str, **kwargs) -> str:
-        # 实现你的逻辑
-        messages = [{"role": "user", "content": input_text}]
-        response = self.llm.think(messages)
-
-        # 保存历史
-        self.add_message(Message(input_text, "user"))
-        self.add_message(Message(response, "assistant"))
-
-        return response
-```
-
-## 🛠️ 工具系统
-
-### 创建自定义工具
-
-```python
-from hello_agents import Tool
-
-class MyTool(Tool):
-    def __init__(self):
-        super().__init__(
-            name="my_tool",
-            description="我的自定义工具"
-        )
-
-    def run(self, *args, **kwargs):
-        # 实现工具逻辑
-        return "工具执行结果"
-```
-
-### 注册工具
-
-```python
-from hello_agents import ToolRegistry
-
-registry = ToolRegistry()
-registry.register_tool(MyTool())
-
-# 或注册函数
-def my_function(text: str) -> str:
-    return f"处理: {text}"
-
-registry.register_function(
-    name="my_func",
-    description="我的函数工具",
-    func=my_function
-)
-```
-
-## 📝 运行测试
+## 开发
 
 ```bash
-# 测试 SimpleAgent
-python test/test_simple_agent.py
+# 安装依赖
+npm install
 
-# 测试 ReActAgent
-python test/test_react_agent.py
+# 构建
+npm run build
 
-# 测试 ReflectionAgent
-python test/test_reflection_agent.py
+# 运行测试
+npm test
 
-# 测试 PlanAndSolveAgent
-python test/test_plan_solve_agent.py
+# 类型检查
+npm run typecheck
 ```
 
-## 🤝 贡献
+## 运行示例
 
-欢迎提交 Issue 和 Pull Request！
+```bash
+# 编译后运行
+npm run build
+node dist/examples/simple-agent-demo.js
 
-## 📄 许可证
+# 或使用 ts-node
+npx ts-node examples/simple-agent-demo.ts
+```
 
-MIT License
+## 开源使用建议（GitHub）
 
-## 🙏 致谢
+- **不要提交 `.env`**：用 `env.example` 做模板，敏感信息只放本地环境。
+- **想验证 RAG 是否走到 Qdrant**：运行 MemoryAgent 示例时观察日志 `🔍 Qdrant 搜索返回 X 个结果`。
 
-本项目参考 [Hello Agents - 构建你的 Agent 框架](https://datawhalechina.github.io/hello-agents/#/./chapter7/%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%9E%84%E5%BB%BA%E4%BD%A0%E7%9A%84Agent%E6%A1%86%E6%9E%B6)
+## License
 
----
-
-**Happy Coding! 🎉**
+MIT

@@ -1,0 +1,51 @@
+{
+  "name": "w-agent",
+  "version": "1.0.0",
+  "description": "A TypeScript Agent Framework - Node.js port of HelloAgents",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "chat": "npx tsx examples/chat.ts"
+  },
+  "keywords": [
+    "agent",
+    "llm",
+    "openai",
+    "ai",
+    "chatbot",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@qdrant/js-client-rest": "^1.16.2",
+    "dotenv": "^16.4.7",
+    "mathjs": "^14.0.1",
+    "neo4j-driver": "^6.0.1",
+    "openai": "^4.77.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
