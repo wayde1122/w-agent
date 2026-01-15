@@ -6,11 +6,15 @@
  * 直到无工具调用或达到 maxSteps
  */
 
-import OpenAI from 'openai';
-import { HelloAgentsLLM, ChatMessage } from './llm.js';
-import { ToolExecutor, ToolCallRequest, ToolCallResult } from '../tools/executor.js';
-import { FunctionSchema } from '../tools/base.js';
-import { Logger, silentLogger } from './logger.js';
+import OpenAI from "openai";
+import { HelloAgentsLLM, ChatMessage } from "./llm.js";
+import {
+  ToolExecutor,
+  ToolCallRequest,
+  ToolCallResult,
+} from "../tools/executor.js";
+import { FunctionSchema } from "../tools/base.js";
+import { Logger, silentLogger } from "./logger.js";
 
 /**
  * 单步执行记录
@@ -85,10 +89,12 @@ export async function runToolCallingLoop(
   let reachedMaxSteps = false;
 
   // 构建 OpenAI 格式的消息
-  const openaiMessages: OpenAI.ChatCompletionMessageParam[] = messages.map((m) => ({
-    role: m.role as 'user' | 'assistant' | 'system',
-    content: m.content,
-  }));
+  const openaiMessages: OpenAI.ChatCompletionMessageParam[] = messages.map(
+    (m) => ({
+      role: m.role as "user" | "assistant" | "system",
+      content: m.content,
+    })
+  );
 
   const client = llm.getClient();
 
@@ -97,7 +103,7 @@ export async function runToolCallingLoop(
     logger.debug(`工具调用循环: 第 ${stepsUsed} 步`);
 
     let toolCalls: ToolCallRequest[] = [];
-    let llmContent = '';
+    let llmContent = "";
 
     if (useNativeToolCalling && toolSchemas.length > 0) {
       // 原生 tool calling 模式
@@ -105,17 +111,20 @@ export async function runToolCallingLoop(
         model: llm.model,
         messages: openaiMessages,
         tools: toolSchemas as OpenAI.ChatCompletionTool[],
-        tool_choice: 'auto',
+        tool_choice: "auto",
         temperature: temperature ?? llm.temperature,
         max_tokens: llm.maxTokens,
       });
 
       const choice = response.choices[0];
       const assistantMessage = choice.message;
-      llmContent = assistantMessage.content ?? '';
+      llmContent = assistantMessage.content ?? "";
 
       // 检查是否有工具调用
-      if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+      if (
+        assistantMessage.tool_calls &&
+        assistantMessage.tool_calls.length > 0
+      ) {
         toolCalls = executor.parseFromOpenAIResponse({
           ...response,
           choices: [{ ...choice, message: assistantMessage }],
@@ -123,7 +132,7 @@ export async function runToolCallingLoop(
 
         // 添加 assistant 消息（含 tool_calls）
         openaiMessages.push({
-          role: 'assistant',
+          role: "assistant",
           content: llmContent,
           tool_calls: assistantMessage.tool_calls.map((tc) => ({
             id: tc.id,
@@ -137,14 +146,16 @@ export async function runToolCallingLoop(
       }
     } else {
       // 文本协议模式
-      const response = await llm.invoke(openaiMessages as ChatMessage[], { temperature });
+      const response = await llm.invoke(openaiMessages as ChatMessage[], {
+        temperature,
+      });
       llmContent = response;
       toolCalls = executor.parseFromText(response);
 
       if (toolCalls.length > 0) {
         // 添加 assistant 消息
         openaiMessages.push({
-          role: 'assistant',
+          role: "assistant",
           content: llmContent,
         });
       }
@@ -186,9 +197,11 @@ export async function runToolCallingLoop(
       }
     } else {
       // 文本协议：将结果作为 user 消息追加
-      const resultsText = results.map((r) => executor.formatAsText(r)).join('\n\n');
+      const resultsText = results
+        .map((r) => executor.formatAsText(r))
+        .join("\n\n");
       openaiMessages.push({
-        role: 'user',
+        role: "user",
         content: `工具执行结果：\n${resultsText}\n\n请基于这些结果继续回答。`,
       });
     }
@@ -198,19 +211,21 @@ export async function runToolCallingLoop(
   logger.warn(`达到最大步数 ${maxSteps}，强制获取最终答案`);
   reachedMaxSteps = true;
 
-  let finalText = '';
+  let finalText = "";
   if (useNativeToolCalling && toolSchemas.length > 0) {
     const response = await client.chat.completions.create({
       model: llm.model,
       messages: openaiMessages,
       tools: toolSchemas as OpenAI.ChatCompletionTool[],
-      tool_choice: 'none', // 强制不调用工具
+      tool_choice: "none", // 强制不调用工具
       temperature: temperature ?? llm.temperature,
       max_tokens: llm.maxTokens,
     });
-    finalText = response.choices[0].message.content ?? '';
+    finalText = response.choices[0].message.content ?? "";
   } else {
-    finalText = await llm.invoke(openaiMessages as ChatMessage[], { temperature });
+    finalText = await llm.invoke(openaiMessages as ChatMessage[], {
+      temperature,
+    });
   }
 
   return {
@@ -227,7 +242,7 @@ export async function runToolCallingLoop(
 export async function runSingleToolCall(
   messages: ChatMessage[],
   toolSchemas: FunctionSchema[],
-  options: Omit<ToolCallingLoopOptions, 'maxSteps'>
+  options: Omit<ToolCallingLoopOptions, "maxSteps">
 ): Promise<LoopResult> {
   return runToolCallingLoop(messages, toolSchemas, { ...options, maxSteps: 1 });
 }

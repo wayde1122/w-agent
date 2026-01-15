@@ -15,7 +15,7 @@ import {
   KeywordExtractor,
   defaultKeywordExtractor,
   ConsoleLogger,
-} from '../src/index.js';
+} from "../src/index.js";
 
 // ============================================================
 // 方案 1：简单的中文关键词提取（无依赖）
@@ -91,21 +91,21 @@ class SimpleDictTokenizer {
 
 // 示例词典（实际使用时应该更完整）
 const sampleDict = [
-  '人工智能',
-  '机器学习',
-  '深度学习',
-  '自然语言',
-  '语言处理',
-  '神经网络',
-  '知识图谱',
-  '图数据库',
-  '向量数据库',
-  'Python',
-  'TypeScript',
-  'JavaScript',
-  'Agent',
-  'LLM',
-  'RAG',
+  "人工智能",
+  "机器学习",
+  "深度学习",
+  "自然语言",
+  "语言处理",
+  "神经网络",
+  "知识图谱",
+  "图数据库",
+  "向量数据库",
+  "Python",
+  "TypeScript",
+  "JavaScript",
+  "Agent",
+  "LLM",
+  "RAG",
 ];
 
 const dictTokenizer = new SimpleDictTokenizer(sampleDict);
@@ -141,14 +141,14 @@ function createJiebaExtractor(): KeywordExtractor | null {
   try {
     // 动态导入，避免未安装时报错
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const jieba = require('nodejieba');
+    const jieba = require("nodejieba");
 
     return (text: string): string[] => {
       const words = jieba.cut(text, true); // 精确模式
       return [...new Set(words.filter((w: string) => w.length >= 2))];
     };
   } catch {
-    console.log('[提示] nodejieba 未安装，使用简单分词');
+    console.log("[提示] nodejieba 未安装，使用简单分词");
     return null;
   }
 }
@@ -158,51 +158,53 @@ function createJiebaExtractor(): KeywordExtractor | null {
 // ============================================================
 
 async function demo() {
-  console.log('=== 中文关键词提取示例 ===\n');
+  console.log("=== 中文关键词提取示例 ===\n");
 
   const testTexts = [
-    '人工智能和机器学习是深度学习的基础',
-    '我想学习 Python 和 TypeScript 编程',
-    '知识图谱可以存储在 Neo4j 图数据库中',
-    'LLM Agent 可以使用 RAG 技术增强回答质量',
+    "人工智能和机器学习是深度学习的基础",
+    "我想学习 Python 和 TypeScript 编程",
+    "知识图谱可以存储在 Neo4j 图数据库中",
+    "LLM Agent 可以使用 RAG 技术增强回答质量",
   ];
 
-  console.log('--- 默认提取器（空格分词，不适合中文）---');
+  console.log("--- 默认提取器（空格分词，不适合中文）---");
   for (const text of testTexts) {
     console.log(`输入: "${text}"`);
-    console.log(`提取: [${defaultKeywordExtractor(text).join(', ')}]`);
+    console.log(`提取: [${defaultKeywordExtractor(text).join(", ")}]`);
     console.log();
   }
 
-  console.log('--- 简单中文提取器 ---');
+  console.log("--- 简单中文提取器 ---");
   for (const text of testTexts) {
     console.log(`输入: "${text}"`);
-    console.log(`提取: [${simpleChineseExtractor(text).join(', ')}]`);
+    console.log(`提取: [${simpleChineseExtractor(text).join(", ")}]`);
     console.log();
   }
 
-  console.log('--- 基于词典的提取器 ---');
+  console.log("--- 基于词典的提取器 ---");
   for (const text of testTexts) {
     console.log(`输入: "${text}"`);
-    console.log(`提取: [${dictBasedExtractor(text).join(', ')}]`);
+    console.log(`提取: [${dictBasedExtractor(text).join(", ")}]`);
     console.log();
   }
 
   // 尝试 jieba
   const jiebaExtractor = createJiebaExtractor();
   if (jiebaExtractor) {
-    console.log('--- jieba 分词提取器 ---');
+    console.log("--- jieba 分词提取器 ---");
     for (const text of testTexts) {
       console.log(`输入: "${text}"`);
-      console.log(`提取: [${jiebaExtractor(text).join(', ')}]`);
+      console.log(`提取: [${jiebaExtractor(text).join(", ")}]`);
       console.log();
     }
   }
 
   // 在 MemoryAgent 中使用
-  console.log('--- 在 MemoryAgent 中使用 ---');
-  console.log('要在 MemoryAgent 中使用自定义提取器，请配置 .env 文件中的 LLM 相关环境变量');
-  console.log('示例代码：');
+  console.log("--- 在 MemoryAgent 中使用 ---");
+  console.log(
+    "要在 MemoryAgent 中使用自定义提取器，请配置 .env 文件中的 LLM 相关环境变量"
+  );
+  console.log("示例代码：");
   console.log(`
 import { MemoryAgent, ConsoleLogger } from 'w-agent';
 

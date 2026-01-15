@@ -25,7 +25,9 @@ export type KeywordExtractor = (text: string) => string[];
  * 默认关键词提取（简单实现，适合英文/空格分隔语言）
  * 中文场景建议注入自定义实现（如 jieba 分词）
  */
-export const defaultKeywordExtractor: KeywordExtractor = (text: string): string[] => {
+export const defaultKeywordExtractor: KeywordExtractor = (
+  text: string
+): string[] => {
   const words = text
     .replace(/[，。！？、；：""''（）\[\]【】,.!?;:'"()\[\]]/g, " ")
     .split(/\s+/)
@@ -110,7 +112,9 @@ export class MemoryAgent extends Agent {
 
     this.logger.info(`MemoryAgent 初始化完成`);
     this.logger.debug(`用户: ${this.userId}, 会话: ${this.sessionId}`);
-    this.logger.debug(`RAG: ${this.enableRAG}, 知识图谱: ${this.enableKnowledgeGraph}`);
+    this.logger.debug(
+      `RAG: ${this.enableRAG}, 知识图谱: ${this.enableKnowledgeGraph}`
+    );
   }
 
   /**
@@ -194,7 +198,9 @@ export class MemoryAgent extends Agent {
             }
           }
         }
-        this.logger.debug(`知识图谱检索到 ${context.entities.length} 个相关实体`);
+        this.logger.debug(
+          `知识图谱检索到 ${context.entities.length} 个相关实体`
+        );
       } catch (e) {
         this.logger.warn(`知识图谱检索失败: ${e}`);
       }

@@ -18,14 +18,14 @@ A TypeScript Agent Framework - Node.js port of HelloAgents
 
 ### 多种 Agent 模式
 
-| Agent | 描述 | 适用场景 |
-|-------|------|----------|
-| `UnifiedAgent` | **推荐** 基于 ToolExecutor 的统一 Agent | 通用场景，支持多轮工具调用 |
-| `SimpleAgent` | 简单对话 Agent | 快速原型，简单对话 |
-| `ReActAgent` | 推理与行动结合 (Thought-Action-Observation) | 需要推理过程的任务 |
-| `PlanSolveAgent` | 计划与执行 (Plan-Execute-Summarize) | 复杂多步骤任务 |
-| `FunctionCallAgent` | OpenAI 原生函数调用 | 需要原生 function calling |
-| `MemoryAgent` | 具有记忆和 RAG 功能 | 需要长期记忆的对话 |
+| Agent               | 描述                                        | 适用场景                   |
+| ------------------- | ------------------------------------------- | -------------------------- |
+| `UnifiedAgent`      | **推荐** 基于 ToolExecutor 的统一 Agent     | 通用场景，支持多轮工具调用 |
+| `SimpleAgent`       | 简单对话 Agent                              | 快速原型，简单对话         |
+| `ReActAgent`        | 推理与行动结合 (Thought-Action-Observation) | 需要推理过程的任务         |
+| `PlanSolveAgent`    | 计划与执行 (Plan-Execute-Summarize)         | 复杂多步骤任务             |
+| `FunctionCallAgent` | OpenAI 原生函数调用                         | 需要原生 function calling  |
+| `MemoryAgent`       | 具有记忆和 RAG 功能                         | 需要长期记忆的对话         |
 
 ### 工具系统
 
@@ -111,77 +111,87 @@ DASHSCOPE_API_KEY=sk-xxx
 ### UnifiedAgent 示例（推荐）
 
 ```typescript
-import { HelloAgentsLLM, UnifiedAgent, CalculatorTool, ConsoleLogger } from 'w-agent';
+import {
+  HelloAgentsLLM,
+  UnifiedAgent,
+  CalculatorTool,
+  ConsoleLogger,
+} from "w-agent";
 
 const llm = new HelloAgentsLLM();
-const logger = new ConsoleLogger('INFO'); // 可选：启用日志输出
+const logger = new ConsoleLogger("INFO"); // 可选：启用日志输出
 
 const agent = new UnifiedAgent({
-  name: 'SmartBot',
+  name: "SmartBot",
   llm,
   logger,
-  maxToolSteps: 5,            // 最大工具调用轮数
+  maxToolSteps: 5, // 最大工具调用轮数
   useNativeToolCalling: true, // 使用 OpenAI 原生 tool calling
-  keepTrace: true,            // 保留执行追踪
+  keepTrace: true, // 保留执行追踪
 });
 
 agent.addTool(new CalculatorTool());
 
 // 运行并获取详细结果
-const result = await agent.runWithResult('请计算 (15 + 25) * 3');
-console.log('答案:', result.text);
-console.log('工具调用步数:', result.toolStepsUsed);
+const result = await agent.runWithResult("请计算 (15 + 25) * 3");
+console.log("答案:", result.text);
+console.log("工具调用步数:", result.toolStepsUsed);
 if (result.trace) {
-  console.log('执行追踪:', result.trace);
+  console.log("执行追踪:", result.trace);
 }
 ```
 
 ### SimpleAgent 示例
 
 ```typescript
-import { HelloAgentsLLM, SimpleAgent } from 'w-agent';
+import { HelloAgentsLLM, SimpleAgent } from "w-agent";
 
 const llm = new HelloAgentsLLM();
 
 const agent = new SimpleAgent({
-  name: 'MyBot',
+  name: "MyBot",
   llm,
-  systemPrompt: '你是一个友好的AI助手。',
+  systemPrompt: "你是一个友好的AI助手。",
 });
 
-const response = await agent.run('你好！');
+const response = await agent.run("你好！");
 console.log(response);
 ```
 
 ### 带工具的 Agent
 
 ```typescript
-import { HelloAgentsLLM, SimpleAgent, CalculatorTool, ToolRegistry } from 'w-agent';
+import {
+  HelloAgentsLLM,
+  SimpleAgent,
+  CalculatorTool,
+  ToolRegistry,
+} from "w-agent";
 
 const llm = new HelloAgentsLLM();
 const toolRegistry = new ToolRegistry();
 toolRegistry.registerTool(new CalculatorTool());
 
 const agent = new SimpleAgent({
-  name: 'CalculatorBot',
+  name: "CalculatorBot",
   llm,
   toolRegistry,
   enableToolCalling: true,
 });
 
-const response = await agent.run('请计算 (15 + 25) * 3');
+const response = await agent.run("请计算 (15 + 25) * 3");
 console.log(response);
 ```
 
 ### ReActAgent 示例
 
 ```typescript
-import { HelloAgentsLLM, ReActAgent, SearchTool } from 'w-agent';
+import { HelloAgentsLLM, ReActAgent, SearchTool } from "w-agent";
 
 const llm = new HelloAgentsLLM();
 
 const agent = new ReActAgent({
-  name: 'ResearchBot',
+  name: "ResearchBot",
   llm,
   maxSteps: 5,
 });
@@ -189,19 +199,19 @@ const agent = new ReActAgent({
 // 注意：SearchTool 是 mock 实现，不会真正联网搜索
 agent.addTool(new SearchTool());
 
-const response = await agent.run('什么是机器学习？');
+const response = await agent.run("什么是机器学习？");
 console.log(response);
 ```
 
 ### PlanSolveAgent 示例
 
 ```typescript
-import { HelloAgentsLLM, PlanSolveAgent } from 'w-agent';
+import { HelloAgentsLLM, PlanSolveAgent } from "w-agent";
 
 const llm = new HelloAgentsLLM();
 
 const agent = new PlanSolveAgent({
-  name: 'PlanBot',
+  name: "PlanBot",
   llm,
 });
 
@@ -220,7 +230,13 @@ console.log(response);
 ### FunctionCallAgent 示例
 
 ```typescript
-import { HelloAgentsLLM, FunctionCallAgent, CalculatorTool, SearchTool, ToolRegistry } from 'w-agent';
+import {
+  HelloAgentsLLM,
+  FunctionCallAgent,
+  CalculatorTool,
+  SearchTool,
+  ToolRegistry,
+} from "w-agent";
 
 const llm = new HelloAgentsLLM();
 const toolRegistry = new ToolRegistry();
@@ -228,49 +244,56 @@ toolRegistry.registerTool(new CalculatorTool());
 toolRegistry.registerTool(new SearchTool());
 
 const agent = new FunctionCallAgent({
-  name: 'FunctionBot',
+  name: "FunctionBot",
   llm,
   toolRegistry,
   enableToolCalling: true,
   maxToolIterations: 3,
 });
 
-const response = await agent.run('请计算 sqrt(144) + 2^3 的结果');
+const response = await agent.run("请计算 sqrt(144) + 2^3 的结果");
 console.log(response);
 ```
 
 ### MemoryAgent 示例
 
 ```typescript
-import { HelloAgentsLLM, MemoryAgent, CalculatorTool, ToolRegistry } from 'w-agent';
+import {
+  HelloAgentsLLM,
+  MemoryAgent,
+  CalculatorTool,
+  ToolRegistry,
+} from "w-agent";
 
 const llm = new HelloAgentsLLM();
 const toolRegistry = new ToolRegistry();
 toolRegistry.registerTool(new CalculatorTool());
 
 const agent = new MemoryAgent({
-  name: 'MemoryBot',
+  name: "MemoryBot",
   llm,
-  systemPrompt: '你是一个具有记忆能力的智能助手。',
-  userId: 'user1',
+  systemPrompt: "你是一个具有记忆能力的智能助手。",
+  userId: "user1",
   toolRegistry,
   enableToolCalling: true,
-  enableRAG: true,           // 启用 RAG 检索
+  enableRAG: true, // 启用 RAG 检索
   enableKnowledgeGraph: true, // 启用知识图谱
   ragTopK: 5,
   autoSaveConversation: true,
 });
 
 // 添加知识
-await agent.addKnowledge('TypeScript 是 JavaScript 的超集，添加了静态类型系统。');
+await agent.addKnowledge(
+  "TypeScript 是 JavaScript 的超集，添加了静态类型系统。"
+);
 
 // 添加实体和关系
-await agent.addEntity('ts', 'TypeScript', 'Language');
-await agent.addEntity('js', 'JavaScript', 'Language');
-await agent.addRelation('ts', 'js', 'SUPERSET_OF');
+await agent.addEntity("ts", "TypeScript", "Language");
+await agent.addEntity("js", "JavaScript", "Language");
+await agent.addRelation("ts", "js", "SUPERSET_OF");
 
 // 对话
-const response = await agent.run('什么是 TypeScript？');
+const response = await agent.run("什么是 TypeScript？");
 console.log(response);
 
 // 清理
@@ -280,62 +303,62 @@ await agent.close();
 ### 记忆系统示例
 
 ```typescript
-import { MemoryManager } from 'w-agent';
+import { MemoryManager } from "w-agent";
 
-const manager = new MemoryManager({ userId: 'user1' });
+const manager = new MemoryManager({ userId: "user1" });
 
 // 添加记忆
-await manager.addMemory('用户喜欢Python编程');
-await manager.addMemory('今天学习了机器学习', { memoryType: 'episodic' });
+await manager.addMemory("用户喜欢Python编程");
+await manager.addMemory("今天学习了机器学习", { memoryType: "episodic" });
 
 // 检索记忆
-const memories = await manager.retrieveMemories('Python', { limit: 5 });
+const memories = await manager.retrieveMemories("Python", { limit: 5 });
 
 // 记忆整合
-await manager.consolidateMemories('working', 'episodic', 0.7);
+await manager.consolidateMemories("working", "episodic", 0.7);
 ```
 
 ### 向量数据库 (Qdrant) 示例
 
 ```typescript
-import { QdrantVectorStore, getEmbedding } from 'w-agent';
+import { QdrantVectorStore, getEmbedding } from "w-agent";
 
 // 初始化
 const qdrant = new QdrantVectorStore({
-  collectionName: 'my_collection',
+  collectionName: "my_collection",
   vectorSize: 1024,
 });
 
 const embedder = getEmbedding();
 
 // 添加向量
-const texts = ['人工智能', '机器学习', '深度学习'];
+const texts = ["人工智能", "机器学习", "深度学习"];
 const vectors = await embedder.encode(texts);
-const metadata = texts.map((text) => ({ text, category: 'AI' }));
+const metadata = texts.map((text) => ({ text, category: "AI" }));
 await qdrant.addVectors(vectors, metadata);
 
 // 语义搜索
-const queryVector = (await embedder.encode('什么是AI？'))[0];
+const queryVector = (await embedder.encode("什么是AI？"))[0];
 const results = await qdrant.searchSimilar(queryVector, 5);
 ```
 
 ### 图数据库 (Neo4j) 示例
 
 ```typescript
-import { Neo4jGraphStore } from 'w-agent';
+import { Neo4jGraphStore } from "w-agent";
 
 // 初始化
 const neo4j = new Neo4jGraphStore();
 
 // 添加实体
-await neo4j.addEntity('ai', '人工智能', 'Concept');
-await neo4j.addEntity('ml', '机器学习', 'Concept');
+await neo4j.addEntity("ai", "人工智能", "Concept");
+await neo4j.addEntity("ml", "机器学习", "Concept");
 
 // 添加关系
-await neo4j.addRelationship('ml', 'ai', 'SUBSET_OF');
+await neo4j.addRelationship("ml", "ai", "SUBSET_OF");
 
 // 查找相关实体
-const related = await neo4j.findRelatedEntities('ai', { maxDepth: 2 });
+const related = await neo4j.findRelatedEntities("ai", { maxDepth: 2 });
 
 // 关闭连接
 await neo4j.close();
@@ -429,12 +452,12 @@ npx tsx examples/memory-agent-demo.ts --interactive
 ### 创建简单工具
 
 ```typescript
-import { SimpleTool } from 'w-agent';
+import { SimpleTool } from "w-agent";
 
 const myTool = new SimpleTool(
-  'greet',
-  '向用户打招呼',
-  [{ name: 'name', type: 'string', description: '用户名', required: true }],
+  "greet",
+  "向用户打招呼",
+  [{ name: "name", type: "string", description: "用户名", required: true }],
   (params) => `你好，${params.name}！`
 );
 ```
@@ -444,34 +467,43 @@ const myTool = new SimpleTool(
 **注意**：内置的 `SearchTool` 是 **mock 实现**，不会真正联网搜索。如需真实搜索，可以通过 `searchFn` 注入自定义实现：
 
 ```typescript
-import { SearchTool } from 'w-agent';
+import { SearchTool } from "w-agent";
 
 // 方式 1：注入自定义搜索函数
 const realSearchTool = new SearchTool({
   searchFn: async (query) => {
     // 调用你的搜索 API（如 SerpAPI、Bing Search API 等）
-    const response = await fetch(`https://your-search-api.com?q=${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `https://your-search-api.com?q=${encodeURIComponent(query)}`
+    );
     const data = await response.json();
     return data.results.map((r: { title: string }) => r.title);
   },
 });
 
 // 方式 2：继承 Tool 基类实现完整自定义
-import { Tool, ToolParameter, ToolParameters } from 'w-agent';
+import { Tool, ToolParameter, ToolParameters } from "w-agent";
 
 class MySearchTool extends Tool {
   constructor() {
-    super('my_search', '使用自定义 API 搜索');
+    super("my_search", "使用自定义 API 搜索");
   }
 
   async run(params: ToolParameters): Promise<string> {
     const query = params.input as string;
     // 你的搜索实现...
-    return '搜索结果';
+    return "搜索结果";
   }
 
   getParameters(): ToolParameter[] {
-    return [{ name: 'input', type: 'string', description: '搜索关键词', required: true }];
+    return [
+      {
+        name: "input",
+        type: "string",
+        description: "搜索关键词",
+        required: true,
+      },
+    ];
   }
 }
 ```
@@ -481,16 +513,21 @@ class MySearchTool extends Tool {
 库默认静默（不输出日志）。如需启用日志，可以注入 Logger：
 
 ```typescript
-import { HelloAgentsLLM, UnifiedAgent, ConsoleLogger, createLogger } from 'w-agent';
+import {
+  HelloAgentsLLM,
+  UnifiedAgent,
+  ConsoleLogger,
+  createLogger,
+} from "w-agent";
 
 // 方式 1：使用 ConsoleLogger
-const logger = new ConsoleLogger('DEBUG'); // 级别：DEBUG | INFO | WARN | ERROR
+const logger = new ConsoleLogger("DEBUG"); // 级别：DEBUG | INFO | WARN | ERROR
 
 // 方式 2：使用工厂函数
-const logger2 = createLogger('INFO');
+const logger2 = createLogger("INFO");
 
 const llm = new HelloAgentsLLM({ logger });
-const agent = new UnifiedAgent({ name: 'Bot', llm, logger });
+const agent = new UnifiedAgent({ name: "Bot", llm, logger });
 ```
 
 ## 错误处理
@@ -500,20 +537,20 @@ const agent = new UnifiedAgent({ name: 'Bot', llm, logger });
 ```typescript
 import {
   HelloAgentsError, // 基类
-  LLMError,         // LLM 调用错误
-  AgentError,       // Agent 执行错误
-  ToolError,        // 工具执行错误
-  MemoryError,      // 记忆系统错误
-  ConfigError,      // 配置错误
-} from 'w-agent';
+  LLMError, // LLM 调用错误
+  AgentError, // Agent 执行错误
+  ToolError, // 工具执行错误
+  MemoryError, // 记忆系统错误
+  ConfigError, // 配置错误
+} from "w-agent";
 
 try {
-  const response = await agent.run('你好');
+  const response = await agent.run("你好");
 } catch (error) {
   if (error instanceof LLMError) {
-    console.error('LLM 调用失败:', error.message);
+    console.error("LLM 调用失败:", error.message);
   } else if (error instanceof ToolError) {
-    console.error('工具执行失败:', error.message);
+    console.error("工具执行失败:", error.message);
   }
 }
 ```

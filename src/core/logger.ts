@@ -7,7 +7,7 @@
 /**
  * 日志级别
  */
-export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'SILENT';
+export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR" | "SILENT";
 
 /**
  * 日志级别优先级映射
@@ -36,7 +36,7 @@ export interface Logger {
 export class ConsoleLogger implements Logger {
   private readonly level: LogLevel;
 
-  constructor(level: LogLevel = 'INFO') {
+  constructor(level: LogLevel = "INFO") {
     this.level = level;
   }
 
@@ -45,25 +45,25 @@ export class ConsoleLogger implements Logger {
   }
 
   debug(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('DEBUG')) {
+    if (this.shouldLog("DEBUG")) {
       console.debug(`[DEBUG] ${message}`, ...args);
     }
   }
 
   info(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('INFO')) {
+    if (this.shouldLog("INFO")) {
       console.info(`[INFO] ${message}`, ...args);
     }
   }
 
   warn(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('WARN')) {
+    if (this.shouldLog("WARN")) {
       console.warn(`[WARN] ${message}`, ...args);
     }
   }
 
   error(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('ERROR')) {
+    if (this.shouldLog("ERROR")) {
       console.error(`[ERROR] ${message}`, ...args);
     }
   }
@@ -98,8 +98,8 @@ export const silentLogger = new SilentLogger();
 /**
  * 根据日志级别创建 Logger
  */
-export function createLogger(level: LogLevel = 'SILENT'): Logger {
-  if (level === 'SILENT') {
+export function createLogger(level: LogLevel = "SILENT"): Logger {
+  if (level === "SILENT") {
     return silentLogger;
   }
   return new ConsoleLogger(level);

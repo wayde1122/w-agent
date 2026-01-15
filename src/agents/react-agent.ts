@@ -2,11 +2,11 @@
  * ReActAgent - 推理与行动结合的智能体
  */
 
-import { Agent, AgentOptions } from '../core/agent.js';
-import { Message } from '../core/message.js';
-import { ChatMessage } from '../core/llm.js';
-import { ToolRegistry } from '../tools/registry.js';
-import { Tool } from '../tools/base.js';
+import { Agent, AgentOptions } from "../core/agent.js";
+import { Message } from "../core/message.js";
+import { ChatMessage } from "../core/llm.js";
+import { ToolRegistry } from "../tools/registry.js";
+import { Tool } from "../tools/base.js";
 
 /**
  * 默认 ReAct 提示词模板
@@ -91,18 +91,18 @@ export class ReActAgent extends Agent {
 
       // 构建提示词
       const toolsDesc = this.toolRegistry.getToolsDescription();
-      const historyStr = this.currentHistory.join('\n');
+      const historyStr = this.currentHistory.join("\n");
       const prompt = this.promptTemplate
-        .replace('{tools}', toolsDesc)
-        .replace('{question}', input)
-        .replace('{history}', historyStr);
+        .replace("{tools}", toolsDesc)
+        .replace("{question}", input)
+        .replace("{history}", historyStr);
 
       // 调用 LLM
-      const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+      const messages: ChatMessage[] = [{ role: "user", content: prompt }];
       const responseText = await this.llm.invoke(messages);
 
       if (!responseText) {
-        this.logger.error('LLM未能返回有效响应');
+        this.logger.error("LLM未能返回有效响应");
         break;
       }
 
@@ -114,18 +114,18 @@ export class ReActAgent extends Agent {
       }
 
       if (!action) {
-        this.logger.warn('未能解析出有效的Action，流程终止');
+        this.logger.warn("未能解析出有效的Action，流程终止");
         break;
       }
 
       // 检查是否完成
-      if (action.startsWith('Finish')) {
+      if (action.startsWith("Finish")) {
         const finalAnswer = this.parseActionInput(action);
         this.logger.info(`最终答案: ${finalAnswer}`);
 
         // 保存到历史记录
-        this.addMessage(new Message(input, 'user'));
-        this.addMessage(new Message(finalAnswer, 'assistant'));
+        this.addMessage(new Message(input, "user"));
+        this.addMessage(new Message(finalAnswer, "assistant"));
 
         return finalAnswer;
       }
@@ -133,14 +133,17 @@ export class ReActAgent extends Agent {
       // 执行工具调用
       const { toolName, toolInput } = this.parseAction(action);
       if (!toolName || toolInput === null) {
-        this.currentHistory.push('Observation: 无效的Action格式，请检查。');
+        this.currentHistory.push("Observation: 无效的Action格式，请检查。");
         continue;
       }
 
       this.logger.debug(`行动: ${toolName}[${toolInput}]`);
 
       // 调用工具
-      const observation = await this.toolRegistry.executeTool(toolName, toolInput);
+      const observation = await this.toolRegistry.executeTool(
+        toolName,
+        toolInput
+      );
       this.logger.debug(`观察: ${observation}`);
 
       // 更新历史
@@ -148,12 +151,12 @@ export class ReActAgent extends Agent {
       this.currentHistory.push(`Observation: ${observation}`);
     }
 
-    this.logger.warn('已达到最大步数，流程终止');
-    const finalAnswer = '抱歉，我无法在限定步数内完成这个任务。';
+    this.logger.warn("已达到最大步数，流程终止");
+    const finalAnswer = "抱歉，我无法在限定步数内完成这个任务。";
 
     // 保存到历史记录
-    this.addMessage(new Message(input, 'user'));
-    this.addMessage(new Message(finalAnswer, 'assistant'));
+    this.addMessage(new Message(input, "user"));
+    this.addMessage(new Message(finalAnswer, "assistant"));
 
     return finalAnswer;
   }
@@ -161,7 +164,10 @@ export class ReActAgent extends Agent {
   /**
    * 解析 LLM 输出
    */
-  private parseOutput(text: string): { thought: string | null; action: string | null } {
+  private parseOutput(text: string): {
+    thought: string | null;
+    action: string | null;
+  } {
     const thoughtMatch = text.match(/Thought:\s*(.*)/);
     const actionMatch = text.match(/Action:\s*(.*)/);
 
@@ -174,7 +180,10 @@ export class ReActAgent extends Agent {
   /**
    * 解析行动文本
    */
-  private parseAction(actionText: string): { toolName: string | null; toolInput: string | null } {
+  private parseAction(actionText: string): {
+    toolName: string | null;
+    toolInput: string | null;
+  } {
     const match = actionText.match(/(\w+)\[(.*)\]/);
     if (match) {
       return {
@@ -190,6 +199,6 @@ export class ReActAgent extends Agent {
    */
   private parseActionInput(actionText: string): string {
     const match = actionText.match(/\w+\[(.*)\]/);
-    return match ? match[1] : '';
+    return match ? match[1] : "";
   }
 }

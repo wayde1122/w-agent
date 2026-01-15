@@ -2,12 +2,12 @@
  * FunctionCallAgent - 使用 OpenAI 函数调用范式的 Agent
  */
 
-import { Agent, AgentOptions } from '../core/agent.js';
-import { Message } from '../core/message.js';
-import { ChatMessage } from '../core/llm.js';
-import { ToolRegistry } from '../tools/registry.js';
-import { Tool, FunctionSchema, ToolParameters } from '../tools/base.js';
-import OpenAI from 'openai';
+import { Agent, AgentOptions } from "../core/agent.js";
+import { Message } from "../core/message.js";
+import { ChatMessage } from "../core/llm.js";
+import { ToolRegistry } from "../tools/registry.js";
+import { Tool, FunctionSchema, ToolParameters } from "../tools/base.js";
+import OpenAI from "openai";
 
 /**
  * FunctionCallAgent 选项
@@ -15,7 +15,10 @@ import OpenAI from 'openai';
 export interface FunctionCallAgentOptions extends AgentOptions {
   toolRegistry?: ToolRegistry;
   enableToolCalling?: boolean;
-  defaultToolChoice?: 'auto' | 'none' | { type: 'function'; function: { name: string } };
+  defaultToolChoice?:
+    | "auto"
+    | "none"
+    | { type: "function"; function: { name: string } };
   maxToolIterations?: number;
 }
 
@@ -25,14 +28,18 @@ export interface FunctionCallAgentOptions extends AgentOptions {
 export class FunctionCallAgent extends Agent {
   private toolRegistry?: ToolRegistry;
   private enableToolCalling: boolean;
-  private defaultToolChoice: 'auto' | 'none' | { type: 'function'; function: { name: string } };
+  private defaultToolChoice:
+    | "auto"
+    | "none"
+    | { type: "function"; function: { name: string } };
   private maxToolIterations: number;
 
   constructor(options: FunctionCallAgentOptions) {
     super(options);
     this.toolRegistry = options.toolRegistry;
-    this.enableToolCalling = options.enableToolCalling !== false && !!options.toolRegistry;
-    this.defaultToolChoice = options.defaultToolChoice ?? 'auto';
+    this.enableToolCalling =
+      options.enableToolCalling !== false && !!options.toolRegistry;
+    this.defaultToolChoice = options.defaultToolChoice ?? "auto";
     this.maxToolIterations = options.maxToolIterations ?? 3;
   }
 
@@ -41,21 +48,23 @@ export class FunctionCallAgent extends Agent {
    */
   private getSystemPrompt(): string {
     const basePrompt =
-      this.systemPrompt ?? '你是一个可靠的AI助理，能够在需要时调用工具完成任务。';
+      this.systemPrompt ??
+      "你是一个可靠的AI助理，能够在需要时调用工具完成任务。";
 
     if (!this.enableToolCalling || !this.toolRegistry) {
       return basePrompt;
     }
 
     const toolsDescription = this.toolRegistry.getToolsDescription();
-    if (!toolsDescription || toolsDescription === '暂无可用工具') {
+    if (!toolsDescription || toolsDescription === "暂无可用工具") {
       return basePrompt;
     }
 
-    let prompt = basePrompt + '\n\n## 可用工具\n';
-    prompt += '当你判断需要外部信息或执行动作时，可以直接通过函数调用使用以下工具：\n';
-    prompt += toolsDescription + '\n';
-    prompt += '\n请主动决定是否调用工具，合理利用多次调用来获得完备答案。';
+    let prompt = basePrompt + "\n\n## 可用工具\n";
+    prompt +=
+      "当你判断需要外部信息或执行动作时，可以直接通过函数调用使用以下工具：\n";
+    prompt += toolsDescription + "\n";
+    prompt += "\n请主动决定是否调用工具，合理利用多次调用来获得完备答案。";
 
     return prompt;
   }
@@ -81,7 +90,7 @@ export class FunctionCallAgent extends Agent {
 
     try {
       const parsed = JSON.parse(args);
-      return typeof parsed === 'object' && parsed !== null ? parsed : {};
+      return typeof parsed === "object" && parsed !== null ? parsed : {};
     } catch {
       return {};
     }
@@ -121,13 +130,13 @@ export class FunctionCallAgent extends Agent {
       }
 
       try {
-        if (paramType === 'number' || paramType === 'integer') {
+        if (paramType === "number" || paramType === "integer") {
           converted[key] = Number(value);
-        } else if (paramType === 'boolean') {
-          if (typeof value === 'boolean') {
+        } else if (paramType === "boolean") {
+          if (typeof value === "boolean") {
             converted[key] = value;
-          } else if (typeof value === 'string') {
-            converted[key] = value.toLowerCase() === 'true' || value === '1';
+          } else if (typeof value === "string") {
+            converted[key] = value.toLowerCase() === "true" || value === "1";
           } else {
             converted[key] = Boolean(value);
           }
@@ -145,9 +154,12 @@ export class FunctionCallAgent extends Agent {
   /**
    * 执行工具调用
    */
-  private async executeToolCall(toolName: string, args: ToolParameters): Promise<string> {
+  private async executeToolCall(
+    toolName: string,
+    args: ToolParameters
+  ): Promise<string> {
     if (!this.toolRegistry) {
-      return '❌ 错误：未配置工具注册表';
+      return "❌ 错误：未配置工具注册表";
     }
 
     const tool = this.toolRegistry.getTool(toolName);
@@ -164,7 +176,7 @@ export class FunctionCallAgent extends Agent {
     const func = this.toolRegistry.getFunction(toolName);
     if (func) {
       try {
-        const input = (args.input as string) ?? '';
+        const input = (args.input as string) ?? "";
         return await func(input);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -182,25 +194,31 @@ export class FunctionCallAgent extends Agent {
     input: string,
     options: {
       maxToolIterations?: number;
-      toolChoice?: 'auto' | 'none' | { type: 'function'; function: { name: string } };
+      toolChoice?:
+        | "auto"
+        | "none"
+        | { type: "function"; function: { name: string } };
     } = {}
   ): Promise<string> {
     const messages: Array<OpenAI.ChatCompletionMessageParam> = [];
     const systemPrompt = this.getSystemPrompt();
-    messages.push({ role: 'system', content: systemPrompt });
+    messages.push({ role: "system", content: systemPrompt });
 
     // 添加历史消息
     for (const msg of this.history) {
-      messages.push({ role: msg.role as 'user' | 'assistant', content: msg.content });
+      messages.push({
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+      });
     }
 
-    messages.push({ role: 'user', content: input });
+    messages.push({ role: "user", content: input });
 
     const toolSchemas = this.buildToolSchemas();
     if (toolSchemas.length === 0) {
       const response = await this.llm.invoke(messages as ChatMessage[]);
-      this.addMessage(new Message(input, 'user'));
-      this.addMessage(new Message(response, 'assistant'));
+      this.addMessage(new Message(input, "user"));
+      this.addMessage(new Message(response, "assistant"));
       return response;
     }
 
@@ -208,7 +226,7 @@ export class FunctionCallAgent extends Agent {
     const effectiveToolChoice = options.toolChoice ?? this.defaultToolChoice;
 
     let currentIteration = 0;
-    let finalResponse = '';
+    let finalResponse = "";
 
     const client = this.llm.getClient();
 
@@ -217,20 +235,21 @@ export class FunctionCallAgent extends Agent {
         model: this.llm.model,
         messages,
         tools: toolSchemas as OpenAI.ChatCompletionTool[],
-        tool_choice: effectiveToolChoice as OpenAI.ChatCompletionToolChoiceOption,
+        tool_choice:
+          effectiveToolChoice as OpenAI.ChatCompletionToolChoiceOption,
         temperature: this.llm.temperature,
         max_tokens: this.llm.maxTokens,
       });
 
       const choice = response.choices[0];
       const assistantMessage = choice.message;
-      const content = assistantMessage.content ?? '';
+      const content = assistantMessage.content ?? "";
       const toolCalls = assistantMessage.tool_calls ?? [];
 
       if (toolCalls.length > 0) {
         // 添加助手消息
         messages.push({
-          role: 'assistant',
+          role: "assistant",
           content,
           tool_calls: toolCalls.map((tc) => ({
             id: tc.id,
@@ -245,11 +264,13 @@ export class FunctionCallAgent extends Agent {
         // 执行工具调用并添加结果
         for (const toolCall of toolCalls) {
           const toolName = toolCall.function.name;
-          const args = this.parseFunctionCallArguments(toolCall.function.arguments);
+          const args = this.parseFunctionCallArguments(
+            toolCall.function.arguments
+          );
           const result = await this.executeToolCall(toolName, args);
 
           messages.push({
-            role: 'tool',
+            role: "tool",
             tool_call_id: toolCall.id,
             content: result,
           });
@@ -270,16 +291,16 @@ export class FunctionCallAgent extends Agent {
         model: this.llm.model,
         messages,
         tools: toolSchemas as OpenAI.ChatCompletionTool[],
-        tool_choice: 'none',
+        tool_choice: "none",
         temperature: this.llm.temperature,
         max_tokens: this.llm.maxTokens,
       });
 
-      finalResponse = response.choices[0].message.content ?? '';
+      finalResponse = response.choices[0].message.content ?? "";
     }
 
-    this.addMessage(new Message(input, 'user'));
-    this.addMessage(new Message(finalResponse, 'assistant'));
+    this.addMessage(new Message(input, "user"));
+    this.addMessage(new Message(finalResponse, "assistant"));
     return finalResponse;
   }
 
@@ -298,7 +319,9 @@ export class FunctionCallAgent extends Agent {
         for (const expandedTool of expandedTools) {
           this.toolRegistry.registerTool(expandedTool);
         }
-        this.logger.debug(`工具 '${tool.name}' 已展开为 ${expandedTools.length} 个独立工具`);
+        this.logger.debug(
+          `工具 '${tool.name}' 已展开为 ${expandedTools.length} 个独立工具`
+        );
         return;
       }
     }

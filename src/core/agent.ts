@@ -2,10 +2,10 @@
  * Agent 基类 - 所有 Agent 的抽象基类
  */
 
-import { Message } from './message.js';
-import { HelloAgentsLLM } from './llm.js';
-import { Config, createConfig } from './config.js';
-import { Logger, silentLogger } from './logger.js';
+import { Message } from "./message.js";
+import { HelloAgentsLLM } from "./llm.js";
+import { Config, createConfig } from "./config.js";
+import { Logger, silentLogger } from "./logger.js";
 
 /**
  * Agent 构造选项
@@ -42,7 +42,10 @@ export abstract class Agent {
   /**
    * 运行 Agent（抽象方法，子类必须实现）
    */
-  abstract run(input: string, options?: Record<string, unknown>): Promise<string>;
+  abstract run(
+    input: string,
+    options?: Record<string, unknown>
+  ): Promise<string>;
 
   /**
    * 添加消息到历史记录

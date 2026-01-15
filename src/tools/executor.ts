@@ -7,10 +7,10 @@
  * 3. 可观测的执行追踪
  */
 
-import OpenAI from 'openai';
-import { ToolRegistry } from './registry.js';
-import { ToolParameters } from './base.js';
-import { Logger, silentLogger } from '../core/logger.js';
+import OpenAI from "openai";
+import { ToolRegistry } from "./registry.js";
+import { ToolParameters } from "./base.js";
+import { Logger, silentLogger } from "../core/logger.js";
 
 /**
  * 工具调用请求
@@ -60,7 +60,8 @@ export interface ToolExecutorOptions {
  * [[/TOOL_CALL]]
  * ```
  */
-const JSON_BLOCK_PATTERN = /\[\[TOOL_CALL\]\]\s*([\s\S]*?)\s*\[\[\/TOOL_CALL\]\]/g;
+const JSON_BLOCK_PATTERN =
+  /\[\[TOOL_CALL\]\]\s*([\s\S]*?)\s*\[\[\/TOOL_CALL\]\]/g;
 
 /**
  * 旧版文本协议（兼容）
@@ -86,10 +87,15 @@ export class ToolExecutor {
    * 执行单个工具调用
    */
   async execute(call: ToolCallRequest): Promise<ToolCallResult> {
-    this.logger.debug(`执行工具: ${call.name}, 参数: ${JSON.stringify(call.arguments)}`);
+    this.logger.debug(
+      `执行工具: ${call.name}, 参数: ${JSON.stringify(call.arguments)}`
+    );
 
     try {
-      const result = await this.registry.executeTool(call.name, call.arguments as ToolParameters);
+      const result = await this.registry.executeTool(
+        call.name,
+        call.arguments as ToolParameters
+      );
       this.logger.debug(`工具 ${call.name} 执行成功`);
 
       return {
@@ -105,7 +111,7 @@ export class ToolExecutor {
       return {
         id: call.id,
         name: call.name,
-        output: '',
+        output: "",
         error: errorMsg,
         success: false,
       };
@@ -194,7 +200,7 @@ export class ToolExecutor {
     }
     try {
       const parsed = JSON.parse(argsStr);
-      return typeof parsed === 'object' && parsed !== null ? parsed : {};
+      return typeof parsed === "object" && parsed !== null ? parsed : {};
     } catch {
       return {};
     }
@@ -211,7 +217,7 @@ export class ToolExecutor {
     const params: Record<string, unknown> = {};
 
     // 尝试 JSON
-    if (paramStr.trim().startsWith('{')) {
+    if (paramStr.trim().startsWith("{")) {
       try {
         return JSON.parse(paramStr);
       } catch {
@@ -220,12 +226,12 @@ export class ToolExecutor {
     }
 
     // key=value 格式
-    if (paramStr.includes('=')) {
-      const pairs = paramStr.split(',');
+    if (paramStr.includes("=")) {
+      const pairs = paramStr.split(",");
       for (const pair of pairs) {
-        const [key, ...valueParts] = pair.split('=');
+        const [key, ...valueParts] = pair.split("=");
         if (key && valueParts.length > 0) {
-          params[key.trim()] = this.parseValue(valueParts.join('=').trim());
+          params[key.trim()] = this.parseValue(valueParts.join("=").trim());
         }
       }
       return params;
@@ -248,8 +254,8 @@ export class ToolExecutor {
       return num;
     }
     // 布尔
-    if (value.toLowerCase() === 'true') return true;
-    if (value.toLowerCase() === 'false') return false;
+    if (value.toLowerCase() === "true") return true;
+    if (value.toLowerCase() === "false") return false;
     // 字符串
     return value;
   }
@@ -264,9 +270,11 @@ export class ToolExecutor {
   /**
    * 将工具调用结果格式化为 OpenAI tool message 格式
    */
-  formatAsToolMessage(result: ToolCallResult): OpenAI.ChatCompletionToolMessageParam {
+  formatAsToolMessage(
+    result: ToolCallResult
+  ): OpenAI.ChatCompletionToolMessageParam {
     return {
-      role: 'tool',
+      role: "tool",
       tool_call_id: result.id,
       content: result.success ? result.output : `错误: ${result.error}`,
     };

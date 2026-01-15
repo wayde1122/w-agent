@@ -166,14 +166,14 @@ abstract class Agent {
 
 ### Agent 实现
 
-| Agent | 文件 | 特点 |
-|-------|------|------|
-| `UnifiedAgent` | `unified-agent.ts` | **推荐**。基于 ToolExecutor，支持原生 tool calling 和文本协议 |
-| `SimpleAgent` | `simple-agent.ts` | 最简单的对话循环，可选工具调用 |
-| `ReActAgent` | `react-agent.ts` | Thought-Action-Observation 风格（推理-行动-观察） |
-| `PlanSolveAgent` | `plan-solve-agent.ts` | 先计划再执行再总结的分段策略 |
-| `FunctionCallAgent` | `function-call-agent.ts` | 利用 OpenAI 原生 function calling |
-| `MemoryAgent` | `memory-agent.ts` | 集成记忆/RAG/知识图谱的完整 Agent |
+| Agent               | 文件                     | 特点                                                          |
+| ------------------- | ------------------------ | ------------------------------------------------------------- |
+| `UnifiedAgent`      | `unified-agent.ts`       | **推荐**。基于 ToolExecutor，支持原生 tool calling 和文本协议 |
+| `SimpleAgent`       | `simple-agent.ts`        | 最简单的对话循环，可选工具调用                                |
+| `ReActAgent`        | `react-agent.ts`         | Thought-Action-Observation 风格（推理-行动-观察）             |
+| `PlanSolveAgent`    | `plan-solve-agent.ts`    | 先计划再执行再总结的分段策略                                  |
+| `FunctionCallAgent` | `function-call-agent.ts` | 利用 OpenAI 原生 function calling                             |
+| `MemoryAgent`       | `memory-agent.ts`        | 集成记忆/RAG/知识图谱的完整 Agent                             |
 
 ## 工具系统
 
@@ -218,7 +218,7 @@ const executor = createToolExecutor({
   logger: logger,
 });
 
-const result = await executor.execute('calculator', { input: '1+1' });
+const result = await executor.execute("calculator", { input: "1+1" });
 ```
 
 ### tool-calling-loop
@@ -256,24 +256,24 @@ interface Logger {
 
 ### 内置实现
 
-| Logger | 说明 |
-|--------|------|
-| `SilentLogger` | 默认，不输出任何日志 |
+| Logger          | 说明                       |
+| --------------- | -------------------------- |
+| `SilentLogger`  | 默认，不输出任何日志       |
 | `ConsoleLogger` | 输出到控制台，支持级别过滤 |
 
 ### 使用方式
 
 ```typescript
-import { ConsoleLogger, createLogger } from 'w-agent';
+import { ConsoleLogger, createLogger } from "w-agent";
 
 // 创建 Logger
-const logger = new ConsoleLogger('DEBUG');
+const logger = new ConsoleLogger("DEBUG");
 // 或
-const logger = createLogger('INFO');
+const logger = createLogger("INFO");
 
 // 注入到 LLM 和 Agent
 const llm = new HelloAgentsLLM({ logger });
-const agent = new UnifiedAgent({ name: 'Bot', llm, logger });
+const agent = new UnifiedAgent({ name: "Bot", llm, logger });
 ```
 
 ## 记忆系统与 RAG
@@ -288,11 +288,11 @@ const agent = new UnifiedAgent({ name: 'Bot', llm, logger });
 
 ### 记忆类型
 
-| 类型 | 说明 | 存储 |
-|------|------|------|
-| `WorkingMemory` | 短期缓存，近几轮上下文 | 内存 |
-| `EpisodicMemory` | 事件/对话片段 | 可选 Qdrant |
-| `SemanticMemory` | 知识性内容 | Qdrant + Neo4j |
+| 类型             | 说明                   | 存储           |
+| ---------------- | ---------------------- | -------------- |
+| `WorkingMemory`  | 短期缓存，近几轮上下文 | 内存           |
+| `EpisodicMemory` | 事件/对话片段          | 可选 Qdrant    |
+| `SemanticMemory` | 知识性内容             | Qdrant + Neo4j |
 
 ### 记忆流程
 
@@ -316,11 +316,11 @@ Add Memory
 
 `memory/storage/embedding.ts` 提供 embedding 适配：
 
-| 类型 | 说明 |
-|------|------|
-| `openai` | OpenAI Embedding API |
-| `dashscope` | 阿里云 DashScope |
-| `simple` | 本地兜底（便于无 key 环境跑通） |
+| 类型        | 说明                            |
+| ----------- | ------------------------------- |
+| `openai`    | OpenAI Embedding API            |
+| `dashscope` | 阿里云 DashScope                |
+| `simple`    | 本地兜底（便于无 key 环境跑通） |
 
 ### Qdrant / Neo4j
 
